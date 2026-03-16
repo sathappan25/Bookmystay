@@ -163,17 +163,17 @@ public class BookMyStayAPP {
         suite.displayRoomDetails();
 
         // UC3: Centralized Inventory
-        RoomInventory inventory = new RoomInventory();
-        inventory.addRoomType(single.getRoomType(), 5);
-        inventory.addRoomType(doubleRoom.getRoomType(), 3);
-        inventory.addRoomType(suite.getRoomType(), 2);
+        RoomInventory inventory1 = new RoomInventory();
+        inventory1.addRoomType(single.getRoomType(), 5);
+        inventory1.addRoomType(doubleRoom.getRoomType(), 3);
+        inventory1.addRoomType(suite.getRoomType(), 2);
 
         // Display inventory
-        inventory.displayInventory();
+        inventory1.displayInventory();
 
         // Example update
-        inventory.updateAvailability("Single Room", 4);
+        inventory1.updateAvailability("Single Room", 4);
         System.out.println("\nAfter booking one Single Room:");
-        inventory.displayInventory();
+        inventory1.displayInventory();
     }
 }
