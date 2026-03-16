@@ -1,4 +1,22 @@
- 
+/**
+ * BookMyStayAPP.java
+ *
+ * UC1: Application startup and welcome message.
+ * UC2: Room modeling with abstract classes, inheritance, and static availability.
+ * UC3: Centralized inventory management using HashMap.
+ * UC4: Room search & availability check (read-only access).
+ * UC5: Booking request intake using Queue (FIFO).
+ * UC6: Reservation confirmation & room allocation with uniqueness enforcement.
+ *
+ * @author Aanish
+ * @version 6.1
+ * @version 5.1
+ * @version 4.1
+ *
+ * @author Aanish
+ * @version 3.1
+ */
+
 import java.util.*;
 
 // Abstract class representing a generalized Room
@@ -146,19 +164,71 @@ class BookingRequestQueue {
         requestQueue = new LinkedList<>();
     }
 
-    // Add request to queue
     public void addRequest(Reservation reservation) {
         requestQueue.add(reservation);
         System.out.println("Booking request added for " + reservation.getGuestName() +
                 " (" + reservation.getRoomType() + ")");
     }
 
-    // Display queued requests
+    public Queue<Reservation> getQueue() {
+        return requestQueue;
+    }
+
     public void displayQueue() {
         System.out.println("\n--- Booking Request Queue (FIFO) ---");
         for (Reservation r : requestQueue) {
             r.displayReservation();
         }
+    }
+}
+
+// UC6: Booking Service (Reservation Confirmation & Allocation)
+class BookingService {
+    private RoomInventory inventory;
+    private Map<String, Set<String>> allocatedRooms;
+
+    public BookingService(RoomInventory inventory) {
+        this.inventory = inventory;
+        this.allocatedRooms = new HashMap<>();
+    }
+
+    // Process requests from queue
+    public void processRequests(BookingRequestQueue bookingQueue) {
+        Queue<Reservation> queue = bookingQueue.getQueue();
+
+        System.out.println("\n--- Processing Booking Requests ---");
+        while (!queue.isEmpty()) {
+            Reservation request = queue.poll();
+            String roomType = request.getRoomType();
+            int availability = inventory.getAvailability(roomType);
+
+            if (availability > 0) {
+                // Generate unique room ID
+                String roomId = generateRoomId(roomType);
+
+                // Ensure uniqueness
+                allocatedRooms.putIfAbsent(roomType, new HashSet<>());
+                if (!allocatedRooms.get(roomType).contains(roomId)) {
+                    allocatedRooms.get(roomType).add(roomId);
+
+                    // Update inventory
+                    inventory.updateAvailability(roomType, availability - 1);
+
+                    System.out.println("CONFIRMED -> Guest: " + request.getGuestName() +
+                            " | Room Type: " + roomType +
+                            " | Room ID: " + roomId);
+                }
+            } else {
+                System.out.println("FAILED -> Guest: " + request.getGuestName() +
+                        " | Room Type: " + roomType +
+                        " | Reason: No availability");
+            }
+        }
+    }
+
+    // Generate unique room ID
+    private String generateRoomId(String roomType) {
+        return roomType.replace(" ", "_") + "_" + UUID.randomUUID().toString().substring(0, 6);
     }
 }
 
@@ -168,6 +238,7 @@ public class BookMyStayAPP {
         // UC1: Welcome message
         System.out.println("=======================================");
         System.out.println("   Welcome to Book My Stay App!");
+        System.out.println("   Hotel Booking Management System v6.1");
         System.out.println("   Hotel Booking Management System v5.1");
         System.out.println("   Hotel Booking Management System v4.1");
         System.out.println("   Hotel Booking Management System v3.1");
@@ -181,8 +252,8 @@ public class BookMyStayAPP {
 
         // UC3: Centralized Inventory
         RoomInventory inventory = new RoomInventory();
-        inventory.addRoomType(single.getRoomType(), 5);
-        inventory.addRoomType(doubleRoom.getRoomType(), 3);
+        inventory.addRoomType(single.getRoomType(), 2);
+        inventory.addRoomType(doubleRoom.getRoomType(), 1);
         inventory.addRoomType(suite.getRoomType(), 0); // Suite fully booked
         inventory.displayInventory();
 
@@ -196,8 +267,13 @@ public class BookMyStayAPP {
         bookingQueue.addRequest(new Reservation("Bob", "Double Room"));
         bookingQueue.addRequest(new Reservation("Charlie", "Suite Room"));
         bookingQueue.addRequest(new Reservation("Diana", "Single Room"));
-
         bookingQueue.displayQueue();
+
+        // UC6: Process requests and confirm reservations
+        BookingService bookingService = new BookingService(inventory);
+        bookingService.processRequests(bookingQueue);
+
+        // Final inventory state
         // Search again after update
         searchService.searchAvailableRooms(rooms);
         single.displayRoomDetails();
