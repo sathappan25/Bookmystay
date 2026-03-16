@@ -1,25 +1,7 @@
-/**
- * BookMyStayAPP.java
- *
- * UC1: Application startup and welcome message.
- * UC2: Room modeling with abstract classes, inheritance, and static availability.
- * UC3: Centralized inventory management using HashMap.
- * UC4: Room search & availability check (read-only access).
- * UC5: Booking request intake using Queue (FIFO).
- * UC6: Reservation confirmation & room allocation with uniqueness enforcement.
- *
- * @author Aanish
- * @version 6.1
- * @version 5.1
- * @version 4.1
- *
- * @author Aanish
- * @version 3.1
- */
+
 
 import java.util.*;
 
-// Abstract class representing a generalized Room
 abstract class Room {
     private String roomType;
     private int numberOfBeds;
@@ -46,7 +28,6 @@ abstract class Room {
     public abstract void displayRoomDetails();
 }
 
-// Concrete room classes
 class SingleRoom extends Room {
     public SingleRoom() {
         super("Single Room", 1, 1500.0);
@@ -83,7 +64,6 @@ class SuiteRoom extends Room {
     }
 }
 
-// UC3: Centralized Inventory Management
 class RoomInventory {
     private Map<String, Integer> inventory;
 
@@ -113,7 +93,6 @@ class RoomInventory {
     }
 }
 
-// UC4: Search Service (Read-only access)
 class SearchService {
     private RoomInventory inventory;
 
@@ -133,7 +112,6 @@ class SearchService {
     }
 }
 
-// UC5: Reservation and Booking Request Queue
 class Reservation {
     private String guestName;
     private String roomType;
@@ -182,7 +160,6 @@ class BookingRequestQueue {
     }
 }
 
-// UC6: Booking Service (Reservation Confirmation & Allocation)
 class BookingService {
     private RoomInventory inventory;
     private Map<String, Set<String>> allocatedRooms;
@@ -192,7 +169,6 @@ class BookingService {
         this.allocatedRooms = new HashMap<>();
     }
 
-    // Process requests from queue
     public void processRequests(BookingRequestQueue bookingQueue) {
         Queue<Reservation> queue = bookingQueue.getQueue();
 
@@ -203,15 +179,12 @@ class BookingService {
             int availability = inventory.getAvailability(roomType);
 
             if (availability > 0) {
-                // Generate unique room ID
                 String roomId = generateRoomId(roomType);
 
-                // Ensure uniqueness
                 allocatedRooms.putIfAbsent(roomType, new HashSet<>());
                 if (!allocatedRooms.get(roomType).contains(roomId)) {
                     allocatedRooms.get(roomType).add(roomId);
 
-                    // Update inventory
                     inventory.updateAvailability(roomType, availability - 1);
 
                     System.out.println("CONFIRMED -> Guest: " + request.getGuestName() +
@@ -226,13 +199,11 @@ class BookingService {
         }
     }
 
-    // Generate unique room ID
     private String generateRoomId(String roomType) {
         return roomType.replace(" ", "_") + "_" + UUID.randomUUID().toString().substring(0, 6);
     }
 }
 
-// Application Entry Point
 public class BookMyStayAPP {
     public static void main(String[] args) {
         // UC1: Welcome message
@@ -244,24 +215,20 @@ public class BookMyStayAPP {
         System.out.println("   Hotel Booking Management System v3.1");
         System.out.println("=======================================\n");
 
-        // UC2: Initialize room objects
         Room single = new SingleRoom();
         Room doubleRoom = new DoubleRoom();
         Room suite = new SuiteRoom();
         Room[] rooms = { single, doubleRoom, suite };
 
-        // UC3: Centralized Inventory
         RoomInventory inventory = new RoomInventory();
         inventory.addRoomType(single.getRoomType(), 2);
         inventory.addRoomType(doubleRoom.getRoomType(), 1);
         inventory.addRoomType(suite.getRoomType(), 0); // Suite fully booked
         inventory.displayInventory();
 
-        // UC4: Room Search (Read-only)
         SearchService searchService = new SearchService(inventory);
         searchService.searchAvailableRooms(rooms);
 
-        // UC5: Booking Request Queue
         BookingRequestQueue bookingQueue = new BookingRequestQueue();
         bookingQueue.addRequest(new Reservation("Alice", "Single Room"));
         bookingQueue.addRequest(new Reservation("Bob", "Double Room"));
@@ -269,27 +236,21 @@ public class BookMyStayAPP {
         bookingQueue.addRequest(new Reservation("Diana", "Single Room"));
         bookingQueue.displayQueue();
 
-        // UC6: Process requests and confirm reservations
         BookingService bookingService = new BookingService(inventory);
         bookingService.processRequests(bookingQueue);
 
-        // Final inventory state
-        // Search again after update
         searchService.searchAvailableRooms(rooms);
         single.displayRoomDetails();
         doubleRoom.displayRoomDetails();
         suite.displayRoomDetails();
 
-        // UC3: Centralized Inventory
         RoomInventory inventory1 = new RoomInventory();
         inventory1.addRoomType(single.getRoomType(), 5);
         inventory1.addRoomType(doubleRoom.getRoomType(), 3);
         inventory1.addRoomType(suite.getRoomType(), 2);
 
-        // Display inventory
         inventory1.displayInventory();
 
-        // Example update
         inventory1.updateAvailability("Single Room", 4);
         System.out.println("\nAfter booking one Single Room:");
         inventory1.displayInventory();
